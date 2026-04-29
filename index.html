@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Search: X3 &amp; Cayenne</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0; padding: 24px;
+  background: #f8f7f4; color: #1a1a1a; line-height: 1.5;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+header { margin-bottom: 32px; }
+h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
+.subtitle { color: #6b6b6b; font-size: 14px; margin: 0; }
+.criteria-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding: 12px 16px; background: #fff; border: 1px solid #e6e3dc; border-radius: 10px; }
+.chip { display: inline-block; padding: 4px 10px; background: #f0ede4; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.banner { margin: 16px 0 24px; padding: 12px 16px; background: #fff8e6; border: 1px solid #ecd9a5; border-left: 4px solid #d4a72c; border-radius: 8px; font-size: 14px; }
+.banner.warning { background: #fff0e6; border-color: #ecaf85; border-left-color: #d4632c; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.car-panel { background: #fff; border: 1px solid #e6e3dc; border-radius: 12px; overflow: hidden; }
+.car-header { padding: 18px 20px; border-bottom: 1px solid #efece5; }
+.car-header.bmw { background: linear-gradient(135deg, #eef2f8 0%, #fff 100%); }
+.car-header.porsche { background: linear-gradient(135deg, #f3eee5 0%, #fff 100%); }
+.car-header h2 { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+.car-header .specs { font-size: 13px; color: #6b6b6b; margin: 0; }
+.section { padding: 18px 20px; border-bottom: 1px solid #efece5; }
+.section:last-child { border-bottom: none; }
+.section h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #555; }
+.listing { padding: 14px; background: #faf9f5; border: 1px solid #ece9e0; border-radius: 10px; margin-bottom: 12px; font-size: 13px; }
+.listing-pricerow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #ede9df; }
+.price-block { display: flex; flex-direction: column; }
+.price-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #888; font-weight: 600; }
+.price-value { font-size: 20px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; }
+.price-value.unknown { color: #b08540; font-size: 14px; font-weight: 600; }
+.miles-block { text-align: right; }
+.miles-value { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+.miles-value.unknown { color: #b08540; font-size: 13px; }
+.listing-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1a1a1a; }
+.listing-meta { color: #6b6b6b; font-size: 12px; margin-bottom: 8px; }
+.listing-link { display: inline-block; font-size: 12px; color: #2563b8; text-decoration: none; font-weight: 600; padding: 6px 10px; background: #fff; border: 1px solid #d1ccc0; border-radius: 6px; }
+.listing-link:hover { background: #eef4fb; border-color: #2563b8; }
+.listing.match-strong { border-color: #b8d8b8; background: #f5faf3; }
+.listing.match-reject { border-color: #e8c4c4; background: #fdf6f6; opacity: 0.85; }
+.listing.match-reject .price-value, .listing.match-reject .miles-value { text-decoration: line-through; color: #999; }
+.match-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.05em; vertical-align: middle; }
+.badge-strong { background: #d4ecd1; color: #2d6929; }
+.badge-partial { background: #fce8c4; color: #8a6118; }
+.badge-reject { background: #f1d4d4; color: #8a2929; }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn { display: block; padding: 10px 14px; background: #1a1a1a; color: #fff; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; transition: background 0.15s; cursor: pointer; border: none; font-family: inherit; }
+.btn:hover { background: #333; }
+.btn:disabled { background: #888; cursor: not-allowed; }
+.btn.secondary { background: #fff; color: #1a1a1a; border: 1px solid #d1ccc0; }
+.btn.secondary:hover { background: #f5f3ed; }
+.dealer-list { list-style: none; padding: 0; margin: 0; }
+.dealer-list li { padding: 10px 0; border-bottom: 1px dashed #ece9e0; font-size: 13px; }
+.dealer-list li:last-child { border-bottom: none; }
+.dealer-name { font-weight: 600; }
+.dealer-meta { color: #6b6b6b; font-size: 12px; }
+.dealer-meta a { color: #2563b8; text-decoration: none; }
+.dealer-meta a:hover { text-decoration: underline; }
+.checklist, .publish-block { background: #fff; border: 1px solid #e6e3dc; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+.checklist h2, .publish-block h2 { font-size: 18px; margin: 0 0 14px; }
+.check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 700px) { .check-grid { grid-template-columns: 1fr; } }
+.check-grid h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; margin: 0 0 10px; }
+.check-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13px; }
+.check-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+
+/* Publish form */
+.publish-block { background: #f3f6fa; border-color: #d4dceb; }
+.publish-form { display: grid; gap: 12px; }
+.publish-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .publish-row { grid-template-columns: 1fr; } }
+.publish-field { display: flex; flex-direction: column; gap: 4px; }
+.publish-field label { font-size: 12px; font-weight: 600; color: #444; }
+.publish-field label small { font-weight: 400; color: #777; }
+.publish-field input { padding: 9px 12px; border: 1px solid #c8d1de; border-radius: 7px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #fff; }
+.publish-field input:focus { outline: none; border-color: #2563b8; box-shadow: 0 0 0 3px rgba(37, 99, 184, 0.15); }
+.publish-help { font-size: 12px; color: #555; margin: 0; }
+.publish-help a { color: #2563b8; text-decoration: none; font-weight: 600; }
+.publish-help a:hover { text-decoration: underline; }
+.publish-status { font-size: 13px; padding: 10px 12px; border-radius: 7px; min-height: 20px; display: none; }
+.publish-status.show { display: block; }
+.publish-status.info { background: #e8eef7; color: #2c4a78; border: 1px solid #c8d4ea; }
+.publish-status.error { background: #fde8e8; color: #842020; border: 1px solid #ecc4c4; }
+.publish-status.success { background: #e8f5e3; color: #2d6929; border: 1px solid #c4e0b8; }
+.publish-status .url-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.publish-status .url { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 4px 8px; background: #fff; border-radius: 4px; border: 1px solid #c4e0b8; color: #2563b8; word-break: break-all; }
+.publish-status .btn-copy { padding: 5px 12px; font-size: 12px; background: #1a1a1a; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; }
+.publish-status .btn-copy:hover { background: #333; }
+
+footer { margin-top: 24px; text-align: center; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Car Hunt: BMW X3 + Porsche Cayenne</h1>
+  <p class="subtitle">Within 100 miles of Bethel Park, PA (15102) · X3 ~$40-55k · Cayenne up to ~$60k · white exterior, light interior · clean history</p>
+  <div class="criteria-bar">
+    <span class="chip">X3: $40-55k</span>
+    <span class="chip">Cayenne: up to $60k</span>
+    <span class="chip">White exterior</span>
+    <span class="chip">Non-black interior</span>
+    <span class="chip">Under ~35k miles</span>
+    <span class="chip">No accidents</span>
+    <span class="chip">Single owner preferred</span>
+  </div>
+</header>
+
+<!-- PUBLISH & SHARE (top so it's easy to find) -->
+<div class="publish-block" id="publish-section">
+  <h2>Publish &amp; share</h2>
+  <p class="publish-help">Paste a GitHub personal access token below to push this page to <code>efoerster121/car-search</code> and get a public link. Same flow as your <a href="https://efoerster121.github.io/dinner-plan/" target="_blank">dinner-plan</a>.</p>
+  <p class="publish-help" style="margin-top:6px;"><a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=Car+Search+Publisher" target="_blank">Create a token →</a> (needs the <code>repo</code> scope; expires whenever you choose). Token never leaves this tab.</p>
+  <div class="publish-form" style="margin-top:14px;">
+    <div class="publish-row">
+      <div class="publish-field">
+        <label for="gh-token">GitHub token <small>· ghp_...</small></label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="publish-field">
+        <label for="gh-repo">Repo name</label>
+        <input type="text" id="gh-repo" value="car-search" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <button class="btn" id="publish-btn" onclick="publishToGitHub()" disabled="">Publishing...</button>
+    <div class="publish-status show info" id="publish-status">Uploading <code>index.html</code>...</div>
+  </div>
+</div>
+
+<div class="banner warning">
+  <strong>Cayenne market reality at $60k:</strong> Live Pittsburgh comps show 2023 Cayennes at $68k (37k mi) and $120k. National average for a 2023 base is $72,925. At a $60k ceiling you're hunting for an outlier — a higher-mile base 2023, a 2022 with right options, or a CPO Platinum that's been sitting. Set up alerts and pounce when one drops.
+</div>
+
+<div class="grid">
+
+  <div class="car-panel">
+    <div class="car-header bmw">
+      <h2>BMW X3 · 2022-2024</h2>
+      <p class="specs">xDrive30i or M40i · M Sport + Premium pkg · remote start · (nice-to-have: Shadowline, parking assist, ventilated seats, HUD)</p>
+    </div>
+
+    <div class="section">
+      <h3>Specific listings — verified details</h3>
+
+      <div class="listing match-strong">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">Tap CarGurus</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">10,224 mi</div></div>
+        </div>
+        <div class="listing-title">2024 BMW X3 M40i AWD <span class="match-badge badge-strong">Top Match</span></div>
+        <div class="listing-meta"><strong>Mineral White Metallic</strong> · Canonsburg, PA (~16 mi) · "Fair Deal" per CarGurus · 382 hp 3L I6</div>
+        <a class="listing-link" href="https://www.cargurus.com/Cars/t-Used-BMW-X3-M40i-AWD-Pittsburgh-t75369_L29265" target="_blank">View on CarGurus →</a>
+      </div>
+
+      <div class="listing match-strong">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">Call dealer</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value unknown">Call dealer</div></div>
+        </div>
+        <div class="listing-title">2022 BMW X3 xDrive30i CPO <span class="match-badge badge-partial">No M Sport</span></div>
+        <div class="listing-meta"><strong>Alpine White / Cognac SensaTec interior</strong> · Convenience Pkg (Remote Start, heated seats), Active Driving Assistant · <strong>Lacks M Sport &amp; Premium pkgs</strong> · BMW of Pittsburgh · VIN 5UX53DP0XN9L49744</div>
+        <a class="listing-link" href="https://www.bmwofpittsburgh.com/certified/BMW/2022-BMW-X3-6eb9df47ac181338d0ee9b7f122380c2.htm" target="_blank">View CPO listing →</a>
+      </div>
+
+      <div class="listing">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value">$37,900</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">35,162 mi</div></div>
+        </div>
+        <div class="listing-title">2022 BMW X3 xDrive30i <span class="match-badge badge-partial">Red int, high mi</span></div>
+        <div class="listing-meta"><strong>White / Tacora Red interior</strong> · LW Automotive · zip 15237 (~14 mi) · mileage at upper limit</div>
+      </div>
+
+      <div class="listing match-reject">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">N/A</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">6,493 mi</div></div>
+        </div>
+        <div class="listing-title">2023 BMW X3 xDrive30i <span class="match-badge badge-reject">Reject — not white</span></div>
+        <div class="listing-meta"><strong>Phytonic Blue Metallic / Cognac</strong> · BMW of Pittsburgh · VIN WBX57DP03PN238830</div>
+      </div>
+
+      <div class="listing match-reject">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">N/A</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value unknown">N/A</div></div>
+        </div>
+        <div class="listing-title">2024 BMW X3 xDrive30i <span class="match-badge badge-reject">Reject — not white</span></div>
+        <div class="listing-meta"><strong>Black Sapphire / Tacora Red</strong> · one-owner, clean CARFAX, M Sport + Pano roof + Remote Start · VIN WBX57DP09RN259667</div>
+      </div>
+
+      <div class="listing match-reject">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">N/A</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">1,784 mi</div></div>
+        </div>
+        <div class="listing-title">2023 BMW X3 xDrive30i <span class="match-badge badge-reject">Reject — not white</span></div>
+        <div class="listing-meta"><strong>Dark Graphite / Oyster interior</strong> · Shadowline + Premium + M Sport + Pano roof + Harman/Kardon · VIN 5UX53DP05P9N54892 · Ken Ganley Cleveland</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Browse fresh inventory (filters pre-applied)</h3>
+      <div class="btn-grid">
+        <a class="btn" target="_blank" href="https://www.cars.com/shopping/results/?makes[]=bmw&amp;models[]=bmw-x3&amp;zip=15102&amp;maximum_distance=100&amp;year_min=2022&amp;year_max=2024&amp;exterior_color_slugs[]=white&amp;maximum_price=55000&amp;maximum_mileage=35000&amp;stock_type=used">Cars.com</a>
+        <a class="btn" target="_blank" href="https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?entitySelectingHelper.selectedEntity=d392&amp;zip=15102&amp;distance=100&amp;minYear=2022&amp;maxYear=2024&amp;maxPrice=55000&amp;maxMileage=35000&amp;exteriorColor=WHITE">CarGurus</a>
+        <a class="btn" target="_blank" href="https://www.autotrader.com/cars-for-sale/all-cars/white/bmw/x3/bethel-park-pa-15102?searchRadius=100&amp;maxPrice=55000&amp;maxMileage=35000&amp;endYear=2024&amp;startYear=2022">AutoTrader</a>
+        <a class="btn" target="_blank" href="https://www.carfax.com/Used-BMW-X3-Pittsburgh-PA_w55_c23682">CARFAX</a>
+        <a class="btn secondary" target="_blank" href="https://www.edmunds.com/used-bmw-x3-bethel-park-pa/">Edmunds</a>
+        <a class="btn secondary" target="_blank" href="https://www.bmwusa.com/cpo">BMW CPO</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Local BMW dealers</h3>
+      <ul class="dealer-list">
+        <li><div class="dealer-name">BMW of Pittsburgh</div><div class="dealer-meta">~10 mi · <a href="tel:4126820788">(412) 682-0788</a> · <a href="https://www.bmwofpittsburgh.com/certified-inventory/index.htm" target="_blank">CPO inventory</a></div></li>
+        <li><div class="dealer-name">BMW of Sewickley</div><div class="dealer-meta">~25 mi · <a href="https://www.sewickleybmw.com/used-vehicles/certified-pre-owned-vehicles/" target="_blank">CPO inventory</a></div></li>
+        <li><div class="dealer-name">P&amp;W BMW (Bobby Rahal Group)</div><div class="dealer-meta">~12 mi · Wexford, PA</div></li>
+        <li><div class="dealer-name">Bobby Rahal BMW South Hills</div><div class="dealer-meta">~6 mi · closest to Bethel Park</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="car-panel">
+    <div class="car-header porsche">
+      <h2>Porsche Cayenne · 2023+</h2>
+      <p class="specs">Base trim OK · RS Spyder design wheels are a must · (nice-to-have: ventilated seats) · <strong>budget up to ~$60k</strong></p>
+    </div>
+
+    <div class="section">
+      <h3>Specific listings — verified details</h3>
+
+      <div class="listing match-strong">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value">$55,900</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value unknown">See listing</div></div>
+        </div>
+        <div class="listing-title">2023 Cayenne S Platinum Edition <span class="match-badge badge-strong">In budget!</span></div>
+        <div class="listing-meta">Platinum Edition includes 21" wheels (similar look to Spyder design) · Porsche Pittsburgh · <strong>under $60k ceiling</strong></div>
+        <a class="listing-link" href="https://www.porschepittsburgh.com/2023-porsche-cayenne-s-for-sale-pittsburgh-pa.htm" target="_blank">View at Porsche Pittsburgh →</a>
+      </div>
+
+      <div class="listing">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value">$68,242</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">36,992 mi</div></div>
+        </div>
+        <div class="listing-title">2023 Porsche Cayenne <span class="match-badge badge-partial">$8k over budget</span></div>
+        <div class="listing-meta">Pittsburgh PA · over $60k ceiling but worth keeping an eye on for price drops · mileage just over upper limit</div>
+      </div>
+
+      <div class="listing">
+        <div class="listing-pricerow">
+          <div class="price-block"><span class="price-label">Price</span><span class="price-value unknown">Tap CARFAX</span></div>
+          <div class="miles-block"><span class="price-label">Mileage</span><div class="miles-value">17,650 mi</div></div>
+        </div>
+        <div class="listing-title">2024 Cayenne S <span class="match-badge badge-partial">S trim, verify wheels</span></div>
+        <div class="listing-meta">White · via CARFAX Pittsburgh search · verify wheels are RS Spyder · price likely $70k+</div>
+        <a class="listing-link" href="https://www.carfax.com/Used-Porsche-Cayenne-Pittsburgh-PA_w580_c23682" target="_blank">View on CARFAX →</a>
+      </div>
+
+      <div class="listing" style="background:#fff8e6; border-color:#ecd9a5;">
+        <div class="listing-title">Strategy at $60k</div>
+        <div class="listing-meta">The Platinum Edition at $55,900 is your best in-budget shot today. Other plays:
+          <ul style="margin:6px 0 0; padding-left:18px; line-height:1.5;">
+            <li><strong>Set price-drop alerts</strong> on the $68k Pittsburgh listing — Cayennes that sit get $5-10k cuts after 60+ days</li>
+            <li><strong>Hunt 2022 Cayennes</strong> — often $48-58k with similar features</li>
+            <li><strong>CPO Platinum or base 2023</strong> with 25-35k mi can dip to $58-62k</li>
+            <li><strong>Cast wider net</strong> — the filter buttons below set $60k cap; check Cleveland/Columbus/Morgantown weekly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Browse fresh inventory (filters pre-applied at $60k)</h3>
+      <div class="btn-grid">
+        <a class="btn" target="_blank" href="https://www.cars.com/shopping/results/?makes[]=porsche&amp;models[]=porsche-cayenne&amp;zip=15102&amp;maximum_distance=100&amp;year_min=2023&amp;year_max=2026&amp;exterior_color_slugs[]=white&amp;maximum_price=60000&amp;maximum_mileage=35000&amp;stock_type=used">Cars.com</a>
+        <a class="btn" target="_blank" href="https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?entitySelectingHelper.selectedEntity=d748&amp;zip=15102&amp;distance=100&amp;minYear=2023&amp;maxPrice=60000&amp;maxMileage=35000&amp;exteriorColor=WHITE">CarGurus</a>
+        <a class="btn" target="_blank" href="https://www.autotrader.com/cars-for-sale/all-cars/white/porsche/cayenne/bethel-park-pa-15102?searchRadius=100&amp;maxPrice=60000&amp;maxMileage=35000&amp;startYear=2023">AutoTrader</a>
+        <a class="btn" target="_blank" href="https://www.carfax.com/Used-Porsche-Cayenne-Pittsburgh-PA_w580_c23682">CARFAX</a>
+        <a class="btn secondary" target="_blank" href="https://finder.porsche.com/us/en-US/search/cpo">Porsche CPO</a>
+        <a class="btn secondary" target="_blank" href="https://www.edmunds.com/used-certified-pre-owned-porsche-cayenne/">Edmunds CPO</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Local Porsche dealers</h3>
+      <ul class="dealer-list">
+        <li><div class="dealer-name">Porsche Pittsburgh</div><div class="dealer-meta">~10 mi · <a href="https://www.porschepittsburgh.com/" target="_blank">porschepittsburgh.com</a></div></li>
+        <li><div class="dealer-name">Porsche of North Olmsted</div><div class="dealer-meta">~120 mi · Cleveland area · just outside radius but worth a call</div></li>
+        <li><div class="dealer-name">Bobby Rahal Porsche</div><div class="dealer-meta">~15 mi · Wexford, PA</div></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>About RS Spyder wheels</h3>
+      <div class="listing" style="background:#fff;">
+        <div class="listing-meta">RS Spyder Design comes in 20" or 21" sizes. <strong>Stock wheels are usually 19" or 20" cast.</strong> If a car has them it's usually called out in the spec line. If not, retrofit OEM sets run ~$5,800 (20") to ~$7,950 (21") at Porsche Pittsburgh — budget for a swap if you find an otherwise-perfect car.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="checklist">
+  <h2>Buyer's checklist &amp; questions to ask</h2>
+  <div class="check-grid">
+    <div>
+      <h4>Before viewing</h4>
+      <label class="check-item"><input type="checkbox"> Pull CARFAX/AutoCheck (free at most dealers)</label>
+      <label class="check-item"><input type="checkbox"> Confirm exact options/packages via VIN decoder (BMW: <a href="https://www.bimmer.work/" target="_blank">bimmer.work</a>; Porsche: dealer ROC)</label>
+      <label class="check-item"><input type="checkbox"> Verify clean title, no accidents, single owner</label>
+      <label class="check-item"><input type="checkbox"> Ask if remaining factory warranty &amp; whether CPO upgrade is available</label>
+      <label class="check-item"><input type="checkbox"> Get out-the-door price in writing (taxes, fees, doc fees)</label>
+    </div>
+    <div>
+      <h4>At the test drive</h4>
+      <label class="check-item"><input type="checkbox"> All advertised packages actually present (M Sport, Premium, HUD, etc.)</label>
+      <label class="check-item"><input type="checkbox"> Tires — matching set, &gt;5/32" tread, no sidewall damage</label>
+      <label class="check-item"><input type="checkbox"> Brakes — no pulsing, vibration, or noise</label>
+      <label class="check-item"><input type="checkbox"> Cold start (engine cold first thing in morning if possible)</label>
+      <label class="check-item"><input type="checkbox"> Pre-purchase inspection by independent shop (~$150-250)</label>
+      <label class="check-item"><input type="checkbox"> All keys, books, original window sticker</label>
+    </div>
+  </div>
+</div>
+
+<footer>Updated April 29, 2026 · Click any "Browse fresh inventory" button to refresh listings</footer>
+
+</div>
+
+<script>
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function setStatus(text, kind) {
+  const el = document.getElementById('publish-status');
+  el.className = 'publish-status show ' + (kind || 'info');
+  el.innerHTML = text;
+}
+
+async function publishToGitHub() {
+  const btn = document.getElementById('publish-btn');
+  const token = document.getElementById('gh-token').value.trim();
+  const repoName = document.getElementById('gh-repo').value.trim() || 'car-search';
+
+  if (!token) {
+    setStatus('Paste your GitHub token first.', 'error');
+    return;
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(repoName)) {
+    setStatus('Repo name can only contain letters, numbers, dashes, underscores.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Publishing...';
+
+  const headers = {
+    'Authorization': 'Bearer ' + token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+
+  try {
+    setStatus('Authenticating with GitHub...', 'info');
+    const userRes = await fetch('https://api.github.com/user', { headers });
+    if (!userRes.ok) {
+      throw new Error('Token rejected. Make sure it has the <code>repo</code> scope and is not expired.');
+    }
+    const user = await userRes.json();
+    const username = user.login;
+
+    setStatus('Signed in as <strong>' + username + '</strong>. Checking repo...', 'info');
+    const repoCheck = await fetch('https://api.github.com/repos/' + username + '/' + repoName, { headers });
+    const repoExists = repoCheck.ok;
+
+    if (!repoExists && repoCheck.status === 404) {
+      setStatus('Creating repo <strong>' + username + '/' + repoName + '</strong>...', 'info');
+      const createRes = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: repoName, private: false, auto_init: true })
+      });
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        throw new Error('Could not create repo: ' + (err.message || createRes.statusText));
+      }
+      await new Promise(r => setTimeout(r, 2000));
+    } else if (!repoExists) {
+      throw new Error('Repo check failed: ' + repoCheck.status + ' ' + repoCheck.statusText);
+    }
+
+    setStatus('Uploading <code>index.html</code>...', 'info');
+    let existingSha = null;
+    const fileCheck = await fetch('https://api.github.com/repos/' + username + '/' + repoName + '/contents/index.html', { headers });
+    if (fileCheck.ok) {
+      const fileData = await fileCheck.json();
+      existingSha = fileData.sha;
+    }
+
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const content = utf8ToBase64(html);
+
+    const uploadBody = {
+      message: 'Update car search dashboard ' + new Date().toISOString().slice(0, 10),
+      content: content
+    };
+    if (existingSha) uploadBody.sha = existingSha;
+
+    const uploadRes = await fetch('https://api.github.com/repos/' + username + '/' + repoName + '/contents/index.html', {
+      method: 'PUT',
+      headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(uploadBody)
+    });
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json().catch(() => ({}));
+      throw new Error('Upload failed: ' + (err.message || uploadRes.statusText));
+    }
+
+    setStatus('Enabling GitHub Pages...', 'info');
+    const pagesRes = await fetch('https://api.github.com/repos/' + username + '/' + repoName + '/pages', {
+      method: 'POST',
+      headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ source: { branch: 'main', path: '/' } })
+    });
+    // 409 = already enabled (fine). Anything else non-2xx, log but don't fail.
+    if (!pagesRes.ok && pagesRes.status !== 409) {
+      console.warn('Pages enable returned', pagesRes.status);
+    }
+
+    const url = 'https://' + username + '.github.io/' + repoName + '/';
+    setStatus(
+      '<div><strong>Published.</strong> Site will be live in 1-2 minutes.</div>' +
+      '<div class="url-row">' +
+        '<a href="' + url + '" target="_blank" class="url">' + url + '</a>' +
+        '<button class="btn-copy" onclick="navigator.clipboard.writeText(\'' + url + '\').then(()=>{this.textContent=\'Copied!\'; setTimeout(()=>this.textContent=\'Copy link\',2000)})">Copy link</button>' +
+      '</div>',
+      'success'
+    );
+  } catch (err) {
+    setStatus('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Publish to GitHub Pages';
+  }
+}
+</script>
+
+
+</body></html>
