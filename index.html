@@ -71,8 +71,22 @@ h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
 .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13px; }
 .check-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
 
-/* Publish form */
-.publish-block { background: #f3f6fa; border-color: #d4dceb; }
+/* Publish form (collapsed admin section at bottom) */
+.publish-block {
+  background: #f7f6f2; border: 1px solid #e6e3dc;
+  border-radius: 10px; margin-top: 24px; margin-bottom: 16px;
+  padding: 0; overflow: hidden;
+}
+.publish-block summary {
+  cursor: pointer; padding: 10px 16px; font-size: 12px;
+  color: #888; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; user-select: none; list-style: none;
+}
+.publish-block summary::-webkit-details-marker { display: none; }
+.publish-block summary::before { content: "▸ "; display: inline-block; margin-right: 4px; transition: transform 0.15s; }
+.publish-block[open] summary::before { transform: rotate(90deg); }
+.publish-block summary:hover { color: #444; }
+.publish-block .publish-inner { padding: 4px 16px 16px; border-top: 1px dashed #e6e3dc; }
 .publish-form { display: grid; gap: 12px; }
 .publish-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 600px) { .publish-row { grid-template-columns: 1fr; } }
@@ -113,27 +127,6 @@ footer { margin-top: 24px; text-align: center; font-size: 12px; color: #888; }
     <span class="chip">Single owner preferred</span>
   </div>
 </header>
-
-<!-- PUBLISH & SHARE (top so it's easy to find) -->
-<div class="publish-block" id="publish-section">
-  <h2>Publish &amp; share</h2>
-  <p class="publish-help">Paste a GitHub personal access token below to push this page to <code>efoerster121/car-search</code> and get a public link. Same flow as your <a href="https://efoerster121.github.io/dinner-plan/" target="_blank">dinner-plan</a>.</p>
-  <p class="publish-help" style="margin-top:6px;"><a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=Car+Search+Publisher" target="_blank">Create a token →</a> (needs the <code>repo</code> scope; expires whenever you choose). Token never leaves this tab.</p>
-  <div class="publish-form" style="margin-top:14px;">
-    <div class="publish-row">
-      <div class="publish-field">
-        <label for="gh-token">GitHub token <small>· ghp_...</small></label>
-        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="publish-field">
-        <label for="gh-repo">Repo name</label>
-        <input type="text" id="gh-repo" value="car-search" autocomplete="off" spellcheck="false">
-      </div>
-    </div>
-    <button class="btn" id="publish-btn" onclick="publishToGitHub()" disabled="">Publishing...</button>
-    <div class="publish-status show info" id="publish-status">Uploading <code>index.html</code>...</div>
-  </div>
-</div>
 
 <div class="banner warning">
   <strong>Cayenne market reality at $60k:</strong> Live Pittsburgh comps show 2023 Cayennes at $68k (37k mi) and $120k. National average for a 2023 base is $72,925. At a $60k ceiling you're hunting for an outlier — a higher-mile base 2023, a 2022 with right options, or a CPO Platinum that's been sitting. Set up alerts and pounce when one drops.
@@ -333,6 +326,29 @@ footer { margin-top: 24px; text-align: center; font-size: 12px; color: #888; }
     </div>
   </div>
 </div>
+
+<!-- PUBLISH & SHARE (tucked at the bottom — Eric's deploy controls) -->
+<details class="publish-block" id="publish-section" open="">
+  <summary>Publish &amp; share (admin)</summary>
+  <div class="publish-inner">
+    <p class="publish-help">Paste a GitHub personal access token to push this page to <code>efoerster121/car-search</code> and get a public link.</p>
+    <p class="publish-help" style="margin-top:6px;"><a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=Car+Search+Publisher" target="_blank">Create a token →</a> (needs the <code>repo</code> scope). Token never leaves this tab.</p>
+    <div class="publish-form" style="margin-top:14px;">
+      <div class="publish-row">
+        <div class="publish-field">
+          <label for="gh-token">GitHub token <small>· ghp_...</small></label>
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="publish-field">
+          <label for="gh-repo">Repo name</label>
+          <input type="text" id="gh-repo" value="car-search" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <button class="btn" id="publish-btn" onclick="publishToGitHub()" disabled="">Publishing...</button>
+      <div class="publish-status show info" id="publish-status">Uploading <code>index.html</code>...</div>
+    </div>
+  </div>
+</details>
 
 <footer>Updated April 29, 2026 · Click any "Browse fresh inventory" button to refresh listings</footer>
 
